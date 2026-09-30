@@ -1,36 +1,36 @@
 ﻿check,result
-M03 原始行数,61359
-M03 源文件SHA256,dae4a01794d45a5a...
-M03 无法解析月份行数,0
-M03 研究窗口,2022-07 至 2026-07
-M03 窗口内行数,33444
-M03 关键字段缺失行数,0
-M03 空白数量按0处理行数,25803
-M03 非法数量行数,0
-M03 原始重复记录行数,0
-M03 进口商维度重叠组数,0
-M03 车身类别映射,SUV/Sedan/MPV/Hatchback/Station Wagon/Coupe-Convertible
-M03 汇总前注册总量,172394
-M03 汇总后注册总量,172394
-M03 最终表行数,26898
-M03 最终表重复组合数,0
-M03 SUV 覆盖月份数,49
-M03 Sedan 覆盖月份数,49
-M03 MPV 覆盖月份数,49
-COE quota 含千分位逗号行数,0
-COE bids_success 含千分位逗号行数,41
-COE bids_received 含千分位逗号行数,109
-COE premium 含千分位逗号行数,0
-COE 行数,1975
-COE 月份范围,2010-01 至 2026-09
-M09 占位符 '-' 按0处理行数,5
-M09 行数,3611
-M09 月份范围,2016-01 至 2026-07
-MVP02-2 行数,6896
-MVP02-2 年份范围,2015-2025
-MVP01-6 行数,2198
-MVP01-6 年份范围,2005-2025
-充电桩 原始行数,11353
-充电桩 去重后行数,11353
-充电桩 合计充电点(outlets),16935
-充电桩 登记日期范围,2024-01-03 至 2026-12-04
+M03 raw rows,61359
+M03 source file SHA256,dae4a01794d45a5a...
+M03 rows with unparseable month,0
+M03 study window,2022-07 to 2026-07
+M03 rows in window,33444
+M03 rows missing key fields,0
+M03 blank counts treated as 0,25803
+M03 rows with invalid counts,0
+M03 raw duplicate rows,0
+M03 importer overlap groups,0
+M03 body type mapping,SUV/Sedan/MPV/Hatchback/Station Wagon/Coupe-Convertible
+M03 total registrations before aggregation,172394
+M03 total registrations after aggregation,172394
+M03 final table rows,26898
+M03 duplicate keys in final table,0
+M03 SUV months covered,49
+M03 Sedan months covered,49
+M03 MPV months covered,49
+COE quota rows with thousands separators,0
+COE bids_success rows with thousands separators,41
+COE bids_received rows with thousands separators,109
+COE premium rows with thousands separators,0
+COE rows,1975
+COE month range,2010-01 to 2026-09
+M09 '-' placeholders treated as 0,5
+M09 rows,3611
+M09 month range,2016-01 to 2026-07
+MVP02-2 rows,6896
+MVP02-2 year range,2015-2025
+MVP01-6 rows,2198
+MVP01-6 year range,2005-2025
+Chargers raw rows,11353
+Chargers rows after de-duplication,11353
+Chargers total outlets,16935
+Chargers registration date range,2024-01-03 to 2026-12-04

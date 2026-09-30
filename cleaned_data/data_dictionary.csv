@@ -1,0 +1,39 @@
+﻿table,field,definition
+registration_fact.csv,month,"Registration month, format YYYY-MM"
+registration_fact.csv,make,Brand name (leading/trailing spaces removed)
+registration_fact.csv,fuel_type,Fuel type; Electric = battery electric vehicle (BEV)
+registration_fact.csv,body,Standardised body type
+registration_fact.csv,registrations,"New registrations for month x make x fuel x body (importer types summed), unit: vehicles"
+coe_clean.csv,month,"Bidding month, datetime"
+coe_clean.csv,bidding_no,Bidding exercise within the month (1 or 2)
+coe_clean.csv,vehicle_class,COE category (Category A-E)
+coe_clean.csv,quota,Quota (thousands separators removed)
+coe_clean.csv,bids_success,Number of successful bids (thousands separators removed)
+coe_clean.csv,bids_received,Number of bids received (thousands separators removed)
+coe_clean.csv,premium,Quota premium / clearing price (thousands separators removed)
+fleet_clean.csv,month,"Month, datetime"
+fleet_clean.csv,category,Vehicle category (e.g. Cars)
+fleet_clean.csv,type,Fuel type
+fleet_clean.csv,number,"Vehicle population, unit: vehicles"
+mvp02_clean.csv,year,Year
+mvp02_clean.csv,make,Brand
+mvp02_clean.csv,importer_type,"Importer type (AMD / PI, from 2023)"
+mvp02_clean.csv,fuel,Fuel type
+mvp02_clean.csv,type,Body type
+mvp02_clean.csv,number,Annual new registrations
+mvp01_clean.csv,year,Year
+mvp01_clean.csv,make,Brand
+mvp01_clean.csv,fuel_type,Fuel type (mostly blank in early years)
+mvp01_clean.csv,number,Annual registrations
+chargers_clean.csv,charger_code,EV charger registration code
+chargers_clean.csv,operator,Operator
+chargers_clean.csv,outlets,Number of charging outlets
+chargers_clean.csv,cp_id,Unique charge point ID (used for de-duplication)
+chargers_clean.csv,plug_type,Plug type
+chargers_clean.csv,charging_speed_kw,Charging power (kW)
+chargers_clean.csv,postal_code,Postal code
+chargers_clean.csv,address fields,block_no / street_name / building_name / floor_no / lot_no
+chargers_clean.csv,public_accessible,Whether the charger is open to the public
+chargers_clean.csv,longitude / latitude,Longitude / latitude
+chargers_clean.csv,registration_date,Registration date
+chargers_clean.csv,parking_lot_type,Parking lot type
