@@ -1,0 +1,39 @@
+﻿table,field,definition
+registration_fact.csv,month,"注册月份, 格式 YYYY-MM"
+registration_fact.csv,make,品牌名称(清除首尾空格)
+registration_fact.csv,fuel_type,燃料类型; Electric 即纯电 BEV
+registration_fact.csv,body,标准化车身类别
+registration_fact.csv,registrations,"该 月x品牌x燃料x车身 的新注册量(进口商类别已加总), 单位: 辆"
+coe_clean.csv,month,"投标月份, datetime"
+coe_clean.csv,bidding_no,当月第几次投标(1 或 2)
+coe_clean.csv,vehicle_class,COE 类别 Category A-E
+coe_clean.csv,quota,配额(已去千分位逗号)
+coe_clean.csv,bids_success,成功投标数(已去千分位逗号)
+coe_clean.csv,bids_received,收到投标数(已去千分位逗号)
+coe_clean.csv,premium,成交价(已去千分位逗号)
+fleet_clean.csv,month,"月份, datetime"
+fleet_clean.csv,category,车辆类别(如 Cars)
+fleet_clean.csv,type,燃料类型
+fleet_clean.csv,number,"保有量, 单位: 辆"
+mvp02_clean.csv,year,年份
+mvp02_clean.csv,make,品牌
+mvp02_clean.csv,importer_type,"进口商类别(AMD / PI, 2023 起)"
+mvp02_clean.csv,fuel,燃料类型
+mvp02_clean.csv,type,车身类型
+mvp02_clean.csv,number,年度新注册量
+mvp01_clean.csv,year,年份
+mvp01_clean.csv,make,品牌
+mvp01_clean.csv,fuel_type,燃料类型(早期多为空)
+mvp01_clean.csv,number,年度注册量
+chargers_clean.csv,charger_code,充电桩登记编号
+chargers_clean.csv,operator,运营商
+chargers_clean.csv,outlets,充电点数量
+chargers_clean.csv,cp_id,充电桩唯一编号(去重用)
+chargers_clean.csv,plug_type,插头类型
+chargers_clean.csv,charging_speed_kw,充电功率
+chargers_clean.csv,postal_code,邮编
+chargers_clean.csv,address 相关字段,block_no / street_name / building_name / floor_no / lot_no
+chargers_clean.csv,public_accessible,是否对公众开放
+chargers_clean.csv,longitude / latitude,经纬度
+chargers_clean.csv,registration_date,登记日期
+chargers_clean.csv,parking_lot_type,停车场类型
