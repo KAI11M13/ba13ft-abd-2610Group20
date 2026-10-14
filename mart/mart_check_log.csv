@@ -1,0 +1,20 @@
+﻿stage,check,result,detail
+input,I1 fact keys unique (month x make x fuel x body),PASS,"26,898 rows, 0 duplicate keys"
+input,"I2 49 contiguous months, 2022-07 to 2026-07",PASS,"49 months, 2022-07 to 2026-07"
+input,"I3 registrations complete, whole and >= 0",PASS,0 invalid values
+input,I4 total registrations match the cleaning log,PASS,"172,394"
+input,I5 every month-make-fuel combination has 6 body types,PASS,"4,483 combinations x 6 = 26,898 rows"
+input,I6 COE Cat A and B present in all 49 months,PASS,49 of 49 months
+input,I7 car population incl. Electric present in all 49 months,PASS,49 of 49 months
+mart,"M1 147 rows, unique month x segment",PASS,147 rows
+mart,M2 no missing values in core fields,PASS,0 missing
+mart,M3 byd_bev <= market_bev <= market_all,PASS,0 violations
+mart,M4 all shares within 0 to 100,PASS,0 out of range
+mart,M5 matches independent SQL recomputation,PASS,total absolute difference 0
+mart,M6 in-scope BEV total equals fact table,PASS,"63,131 BEVs"
+mart,M7 12 period rows reconcile to monthly rows,PASS,12 rows
+mart,M8 market + share effect = BYD change,PASS,max error 4.55e-13 over 9 transitions
+mart,M9 Capture Gap = share effect + interaction / 2,PASS,max error 2.27e-13
+mart,M10 COE months align with registration months,PASS,49 months
+mart,"M11 monthly = MVP02 annual totals, 2023-2025",PASS,"2023: 30,225 vs 30,225; 2024: 43,022 vs 43,022; 2025: 52,678 vs 52,678"
+mart,M12 frozen headline figures reproduce,PASS,SUV Capture Gap -1426; Sedan Capture Gap 979; MPV Capture Gap -475; BYD P3 share % 46.6; BYD P4 share % 40.9; BYD change P3 to P4 4147
