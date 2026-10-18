@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BYD BEV Segment Dashboard</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #F7F3EB;
+  --surface: #FFFFFF;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #EFE9DF;
+  --axis: #CDBB9F;
+  --ring: rgba(165,143,114,0.28);
+  --wash: #F7F3EB;
+  --brand: #176B66;
+  --brand-ink: #ffffff;
+  --suv: #176B66;
+  --sedan: #A58F72;
+  --mpv: #81D8D0;
+  --total: #52514e;
+  --byd: #176B66;
+  --other: #E8DCC8;
+  --up: #176B66;
+  --down: #b42f2f;
+  --shade: rgba(205,187,159,0.16);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #121211;
+    --surface: #1a1a19;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #5a5244;
+    --ring: rgba(255,255,255,0.10);
+    --wash: #262624;
+    --brand: #176B66;
+    --suv: #176B66;
+    --sedan: #A58F72;
+    --mpv: #81D8D0;
+    --total: #c3c2b7;
+    --byd: #4FB5AE;
+    --other: #3d3a35;
+    --up: #4FB5AE;
+    --down: #e66767;
+    --shade: rgba(79,181,174,0.12);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #121211;
+  --surface: #1a1a19;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #5a5244;
+  --ring: rgba(255,255,255,0.10);
+  --wash: #262624;
+  --brand: #176B66;
+  --suv: #176B66;
+  --sedan: #A58F72;
+  --mpv: #81D8D0;
+  --total: #c3c2b7;
+  --byd: #4FB5AE;
+  --other: #3d3a35;
+  --up: #4FB5AE;
+  --down: #e66767;
+  --shade: rgba(79,181,174,0.12);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px 40px; }
+header.top {
+  background: var(--brand); color: var(--brand-ink);
+  padding: 18px 0 16px; margin-bottom: 16px;
+}
+header.top .wrap { padding-bottom: 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+header.top h1 { font-size: 22px; margin: 0 0 4px; font-weight: 650; letter-spacing: 0.1px; }
+header.top p { margin: 0; opacity: 0.9; font-size: 13px; }
+.theme-btn {
+  background: transparent; color: var(--brand-ink); border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 6px; padding: 5px 10px; font: inherit; font-size: 12px; cursor: pointer;
+}
+.filters {
+  display: flex; flex-wrap: wrap; gap: 18px; align-items: center;
+  padding: 10px 0 14px; position: sticky; top: 0; background: var(--page); z-index: 5;
+}
+.filter { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.filter .lbl { font-size: 12px; color: var(--ink-2); font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid var(--axis); border-radius: 7px; overflow: hidden; background: var(--surface); }
+.seg button {
+  font: inherit; font-size: 13px; padding: 6px 12px; border: 0; background: transparent; color: var(--ink-2);
+  cursor: pointer; border-right: 1px solid var(--axis); display: inline-flex; align-items: center; gap: 6px;
+}
+.seg button:last-child { border-right: 0; }
+.seg button:hover { background: var(--wash); }
+.seg button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); font-weight: 600; }
+.seg button[aria-pressed="true"] .swatch { box-shadow: 0 0 0 1.5px var(--brand-ink); }
+.swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.filters .note { font-size: 12px; color: var(--muted); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.tile { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 14px 16px; }
+.tile .k { font-size: 12px; color: var(--ink-2); margin-bottom: 6px; }
+.tile .v { font-size: 26px; font-weight: 650; line-height: 1.15; }
+.tile .d { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; }
+.tile .d b { font-weight: 650; }
+.pos { color: var(--up); }
+.neg { color: var(--down); }
+section.q { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 18px 18px 14px; margin-bottom: 18px; }
+section.q > h2 { margin: 0 0 2px; font-size: 17px; font-weight: 650; }
+section.q > h2 .tag { display: inline-block; font-size: 11px; font-weight: 700; color: var(--brand-ink); background: var(--brand); border-radius: 4px; padding: 1px 6px; margin-right: 8px; vertical-align: 2px; }
+.insight { margin: 4px 0 14px; color: var(--ink-2); font-size: 13.5px; }
+.insight b { color: var(--ink); }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
+.card h3 { font-size: 13.5px; margin: 0 0 2px; font-weight: 650; }
+.card .sub { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.chart { width: 100%; position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); margin: 2px 0 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 14px; height: 2px; border-radius: 1px; }
+.legend i.box { width: 10px; height: 10px; border-radius: 2px; }
+table.data { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.data th { text-align: left; font-weight: 600; color: var(--ink-2); border-bottom: 1px solid var(--axis); padding: 6px 7px; white-space: nowrap; }
+table.data td { border-bottom: 1px solid var(--grid); padding: 6px 7px; font-variant-numeric: tabular-nums; vertical-align: middle; }
+table.data td.num, table.data th.num { text-align: right; }
+table.data td.num { white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+table.data.wraphead th { white-space: normal; vertical-align: bottom; }
+table.data tr.sel td { background: var(--shade); }
+table.data tr.total td { font-weight: 650; border-top: 1px solid var(--axis); }
+.segname { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+details { margin-top: 10px; }
+details summary { cursor: pointer; font-size: 12.5px; color: var(--ink-2); }
+.foot { font-size: 12px; color: var(--ink-2); margin-top: 6px; }
+.foot h3 { font-size: 13px; color: var(--ink); margin: 0 0 6px; }
+.foot ul { margin: 0; padding-left: 18px; }
+.foot li { margin: 3px 0; }
+#tip {
+  position: fixed; pointer-events: none; z-index: 20; display: none;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--ring);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); border-radius: 8px; padding: 8px 10px; font-size: 12px; min-width: 150px;
+}
+#tip .h { color: var(--ink-2); margin-bottom: 4px; font-size: 11.5px; }
+#tip .r { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+#tip .r .n { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+#tip .r .n i { width: 12px; height: 2px; display: inline-block; border-radius: 1px; }
+#tip .r b { font-weight: 650; font-variant-numeric: tabular-nums; }
+.mark:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+@media (max-width: 900px) {
+  .grid2 { grid-template-columns: minmax(0, 1fr); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .kpis { grid-template-columns: 1fr; }
+  table.data { font-size: 11.5px; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div>
+      <h1>BYD BEV Segment Dashboard</h1>
+      <p>Singapore new BEV registrations in SUV, Sedan and MPV, July 2022 to July 2026 · Group 20 "High Five"</p>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button">Dark mode</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="filters" role="group" aria-label="Filters">
+    <div class="filter">
+      <span class="lbl">Comparison</span>
+      <div class="seg" id="fPeriod"></div>
+    </div>
+    <div class="filter">
+      <span class="lbl">Segment</span>
+      <div class="seg" id="fSeg"></div>
+    </div>
+    <span class="note" id="periodNote"></span>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <section class="q" id="q1">
+    <h2><span class="tag">Q1</span>Where has BYD's growth come from?</h2>
+    <p class="insight" id="q1Insight"></p>
+    <div class="grid2">
+      <div class="card">
+        <h3>BYD BEV registrations by period</h3>
+        <div class="sub">12-month totals; the selected comparison is highlighted</div>
+        <div class="legend" id="q1Legend"></div>
+        <div class="chart" id="q1Cols"></div>
+      </div>
+      <div class="card">
+        <h3>Shift-share decomposition</h3>
+        <div class="sub">Market effect = average BYD share × market change; share effect = average market × share change</div>
+        <div class="tablewrap" id="q1Table"></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h3>Market effect</h3>
+        <div class="sub">BYD registrations gained from segment growth at BYD's average share</div>
+        <div class="chart" id="q1Market"></div>
+      </div>
+      <div class="card">
+        <h3>Share effect</h3>
+        <div class="sub">BYD registrations gained or lost from the change in BYD's share</div>
+        <div class="chart" id="q1Share"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="q" id="q2">
+    <h2><span class="tag">Q2</span>Which segment offers the largest opportunity?</h2>
+    <p class="insight" id="q2Insight"></p>
+    <div class="card">
+      <h3>Monthly BEV registrations, all makes</h3>
+      <div class="sub">Segment BEV market; shaded band = the two periods compared</div>
+      <div class="legend" id="q2Legend"></div>
+      <div class="chart" id="q2Line"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>Segment comparison</h3>
+      <div class="sub">Paired t-test on the 12 matched calendar months; CV = monthly standard deviation ÷ mean</div>
+      <div style="overflow-x:auto" id="q2Table"></div>
+    </div>
+  </section>
+
+  <section class="q" id="q3">
+    <h2><span class="tag">Q3</span>Where is BYD under-capturing the market?</h2>
+    <p class="insight" id="q3Insight"></p>
+    <div class="grid2">
+      <div class="card">
+        <h3>Capture Gap by segment</h3>
+        <div class="sub">BYD actual registrations − (previous-period BYD share × current-period market)</div>
+        <div class="chart" id="q3Gap"></div>
+        <div class="tablewrap" id="q3GapTable"></div>
+      </div>
+      <div class="card">
+        <h3 id="q3CompTitle">Brands above or below their own benchmark</h3>
+        <div class="sub">Same Capture Gap formula applied to each make; BYD highlighted</div>
+        <div class="chart" id="q3Comp"></div>
+        <details><summary>Show all makes as a table</summary><div class="tablewrap" id="q3CompTable"></div></details>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>BYD share of the segment BEV market, monthly</h3>
+      <div class="sub">Hollow points mark thin months (fewer than 50 BEV registrations in the segment); read these as direction only</div>
+      <div class="legend" id="q3Legend"></div>
+      <div class="chart" id="q3Share"></div>
+    </div>
+  </section>
+
+  <section class="q foot">
+    <h3>How to use this dashboard</h3>
+    <ul>
+      <li><b>Quarterly management review:</b> keep P3 → P4, choose a segment, and read the Capture Gap and the brands that gained share against their own benchmark.</li>
+      <li><b>Persistence check:</b> switch to earlier comparisons to see whether a pattern held across P1 → P2 and P2 → P3 before acting on it.</li>
+      <li><b>Monthly monitoring:</b> after each pipeline refresh, the monthly charts show whether BYD's share in the priority segment is recovering.</li>
+    </ul>
+    <p style="margin:10px 0 0">Data: analysis mart of the MySQL database byd_bev_sg (segment_month_full and fact_registration), built from LTA data via data.gov.sg. Periods run August to July: P1 = Aug 2022 to Jul 2023, P2 = Aug 2023 to Jul 2024, P3 = Aug 2024 to Jul 2025, P4 = Aug 2025 to Jul 2026. Field definitions are in data_dictionary.md.</p>
+  </section>
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script id="data" type="application/json">{"monthly":[{"m":"2022-07","s":"MPV","mkt":93,"all":397,"byd":92,"thin":0},{"m":"2022-07","s":"SUV","mkt":108,"all":981,"byd":36,"thin":0},{"m":"2022-07","s":"Sedan","mkt":31,"all":729,"byd":0,"thin":1},{"m":"2022-08","s":"MPV","mkt":43,"all":297,"byd":41,"thin":1},{"m":"2022-08","s":"SUV","mkt":100,"all":875,"byd":4,"thin":0},{"m":"2022-08","s":"Sedan","mkt":110,"all":803,"byd":1,"thin":0},{"m":"2022-09","s":"MPV","mkt":11,"all":262,"byd":8,"thin":1},{"m":"2022-09","s":"SUV","mkt":330,"all":1238,"byd":36,"thin":0},{"m":"2022-09","s":"Sedan","mkt":72,"all":510,"byd":0,"thin":0},{"m":"2022-10","s":"MPV","mkt":64,"all":346,"byd":60,"thin":0},{"m":"2022-10","s":"SUV","mkt":179,"all":1111,"byd":48,"thin":0},{"m":"2022-10","s":"Sedan","mkt":37,"all":495,"byd":0,"thin":1},{"m":"2022-11","s":"MPV","mkt":51,"all":298,"byd":50,"thin":0},{"m":"2022-11","s":"SUV","mkt":208,"all":1061,"byd":23,"thin":0},{"m":"2022-11","s":"Sedan","mkt":65,"all":627,"byd":0,"thin":0},{"m":"2022-12","s":"MPV","mkt":61,"all":312,"byd":56,"thin":0},{"m":"2022-12","s":"SUV","mkt":228,"all":1012,"byd":26,"thin":0},{"m":"2022-12","s":"Sedan","mkt":84,"all":635,"byd":0,"thin":0},{"m":"2023-01","s":"MPV","mkt":24,"all":262,"byd":22,"thin":1},{"m":"2023-01","s":"SUV","mkt":164,"all":917,"byd":27,"thin":0},{"m":"2023-01","s":"Sedan","mkt":29,"all":405,"byd":0,"thin":1},{"m":"2023-02","s":"MPV","mkt":19,"all":372,"byd":18,"thin":1},{"m":"2023-02","s":"SUV","mkt":151,"all":1007,"byd":19,"thin":0},{"m":"2023-02","s":"Sedan","mkt":44,"all":422,"byd":0,"thin":1},{"m":"2023-03","s":"MPV","mkt":37,"all":422,"byd":37,"thin":1},{"m":"2023-03","s":"SUV","mkt":115,"all":1105,"byd":1,"thin":0},{"m":"2023-03","s":"Sedan","mkt":88,"all":566,"byd":0,"thin":0},{"m":"2023-04","s":"MPV","mkt":23,"all":266,"byd":21,"thin":1},{"m":"2023-04","s":"SUV","mkt":206,"all":1128,"byd":100,"thin":0},{"m":"2023-04","s":"Sedan","mkt":43,"all":492,"byd":0,"thin":1},{"m":"2023-05","s":"MPV","mkt":5,"all":435,"byd":5,"thin":1},{"m":"2023-05","s":"SUV","mkt":231,"all":1049,"byd":50,"thin":0},{"m":"2023-05","s":"Sedan","mkt":89,"all":454,"byd":0,"thin":0},{"m":"2023-06","s":"MPV","mkt":6,"all":374,"byd":5,"thin":1},{"m":"2023-06","s":"SUV","mkt":307,"all":1188,"byd":54,"thin":0},{"m":"2023-06","s":"Sedan","mkt":107,"all":469,"byd":0,"thin":0},{"m":"2023-07","s":"MPV","mkt":10,"all":448,"byd":6,"thin":1},{"m":"2023-07","s":"SUV","mkt":368,"all":1151,"byd":104,"thin":0},{"m":"2023-07","s":"Sedan","mkt":90,"all":485,"byd":0,"thin":0},{"m":"2023-08","s":"MPV","mkt":12,"all":454,"byd":10,"thin":1},{"m":"2023-08","s":"SUV","mkt":432,"all":1222,"byd":114,"thin":0},{"m":"2023-08","s":"Sedan","mkt":123,"all":530,"byd":1,"thin":0},{"m":"2023-09","s":"MPV","mkt":12,"all":448,"byd":5,"thin":1},{"m":"2023-09","s":"SUV","mkt":449,"all":1121,"byd":128,"thin":0},{"m":"2023-09","s":"Sedan","mkt":69,"all":522,"byd":4,"thin":0},{"m":"2023-10","s":"MPV","mkt":3,"all":362,"byd":1,"thin":1},{"m":"2023-10","s":"SUV","mkt":328,"all":1195,"byd":130,"thin":0},{"m":"2023-10","s":"Sedan","mkt":70,"all":493,"byd":19,"thin":0},{"m":"2023-11","s":"MPV","mkt":14,"all":397,"byd":9,"thin":1},{"m":"2023-11","s":"SUV","mkt":393,"all":1200,"byd":155,"thin":0},{"m":"2023-11","s":"Sedan","mkt":127,"all":626,"byd":68,"thin":0},{"m":"2023-12","s":"MPV","mkt":11,"all":898,"byd":9,"thin":1},{"m":"2023-12","s":"SUV","mkt":594,"all":2122,"byd":194,"thin":0},{"m":"2023-12","s":"Sedan","mkt":330,"all":1115,"byd":67,"thin":0},{"m":"2024-01","s":"MPV","mkt":21,"all":291,"byd":14,"thin":1},{"m":"2024-01","s":"SUV","mkt":369,"all":1180,"byd":233,"thin":0},{"m":"2024-01","s":"Sedan","mkt":215,"all":501,"byd":10,"thin":0},{"m":"2024-02","s":"MPV","mkt":11,"all":304,"byd":2,"thin":1},{"m":"2024-02","s":"SUV","mkt":558,"all":1315,"byd":356,"thin":0},{"m":"2024-02","s":"Sedan","mkt":157,"all":539,"byd":60,"thin":0},{"m":"2024-03","s":"MPV","mkt":8,"all":410,"byd":1,"thin":1},{"m":"2024-03","s":"SUV","mkt":797,"all":1855,"byd":413,"thin":0},{"m":"2024-03","s":"Sedan","mkt":301,"all":847,"byd":85,"thin":0},{"m":"2024-04","s":"MPV","mkt":9,"all":457,"byd":5,"thin":1},{"m":"2024-04","s":"SUV","mkt":947,"all":1932,"byd":537,"thin":0},{"m":"2024-04","s":"Sedan","mkt":175,"all":761,"byd":55,"thin":0},{"m":"2024-05","s":"MPV","mkt":13,"all":516,"byd":2,"thin":1},{"m":"2024-05","s":"SUV","mkt":697,"all":1681,"byd":322,"thin":0},{"m":"2024-05","s":"Sedan","mkt":280,"all":737,"byd":53,"thin":0},{"m":"2024-06","s":"MPV","mkt":17,"all":601,"byd":3,"thin":1},{"m":"2024-06","s":"SUV","mkt":744,"all":1916,"byd":319,"thin":0},{"m":"2024-06","s":"Sedan","mkt":388,"all":902,"byd":74,"thin":0},{"m":"2024-07","s":"MPV","mkt":16,"all":632,"byd":3,"thin":1},{"m":"2024-07","s":"SUV","mkt":772,"all":2105,"byd":333,"thin":0},{"m":"2024-07","s":"Sedan","mkt":342,"all":867,"byd":168,"thin":0},{"m":"2024-08","s":"MPV","mkt":15,"all":561,"byd":8,"thin":1},{"m":"2024-08","s":"SUV","mkt":954,"all":2095,"byd":363,"thin":0},{"m":"2024-08","s":"Sedan","mkt":380,"all":972,"byd":128,"thin":0},{"m":"2024-09","s":"MPV","mkt":38,"all":721,"byd":22,"thin":1},{"m":"2024-09","s":"SUV","mkt":808,"all":2052,"byd":278,"thin":0},{"m":"2024-09","s":"Sedan","mkt":419,"all":1025,"byd":132,"thin":0},{"m":"2024-10","s":"MPV","mkt":186,"all":610,"byd":155,"thin":0},{"m":"2024-10","s":"SUV","mkt":720,"all":1715,"byd":269,"thin":0},{"m":"2024-10","s":"Sedan","mkt":213,"all":799,"byd":78,"thin":0},{"m":"2024-11","s":"MPV","mkt":373,"all":834,"byd":344,"thin":0},{"m":"2024-11","s":"SUV","mkt":619,"all":1679,"byd":127,"thin":0},{"m":"2024-11","s":"Sedan","mkt":284,"all":843,"byd":34,"thin":0},{"m":"2024-12","s":"MPV","mkt":525,"all":1303,"byd":504,"thin":0},{"m":"2024-12","s":"SUV","mkt":1011,"all":2455,"byd":472,"thin":0},{"m":"2024-12","s":"Sedan","mkt":412,"all":1348,"byd":138,"thin":0},{"m":"2025-01","s":"MPV","mkt":296,"all":645,"byd":272,"thin":0},{"m":"2025-01","s":"SUV","mkt":569,"all":1331,"byd":240,"thin":0},{"m":"2025-01","s":"Sedan","mkt":109,"all":430,"byd":50,"thin":0},{"m":"2025-02","s":"MPV","mkt":412,"all":840,"byd":379,"thin":0},{"m":"2025-02","s":"SUV","mkt":822,"all":1771,"byd":370,"thin":0},{"m":"2025-02","s":"Sedan","mkt":325,"all":792,"byd":48,"thin":0},{"m":"2025-03","s":"MPV","mkt":234,"all":821,"byd":162,"thin":0},{"m":"2025-03","s":"SUV","mkt":1092,"all":2271,"byd":595,"thin":0},{"m":"2025-03","s":"Sedan","mkt":274,"all":779,"byd":59,"thin":0},{"m":"2025-04","s":"MPV","mkt":379,"all":918,"byd":331,"thin":0},{"m":"2025-04","s":"SUV","mkt":969,"all":2044,"byd":429,"thin":0},{"m":"2025-04","s":"Sedan","mkt":156,"all":649,"byd":58,"thin":0},{"m":"2025-05","s":"MPV","mkt":287,"all":892,"byd":239,"thin":0},{"m":"2025-05","s":"SUV","mkt":1327,"all":2456,"byd":501,"thin":0},{"m":"2025-05","s":"Sedan","mkt":210,"all":726,"byd":73,"thin":0},{"m":"2025-06","s":"MPV","mkt":314,"all":933,"byd":256,"thin":0},{"m":"2025-06","s":"SUV","mkt":1301,"all":2568,"byd":446,"thin":0},{"m":"2025-06","s":"Sedan","mkt":289,"all":825,"byd":116,"thin":0},{"m":"2025-07","s":"MPV","mkt":304,"all":980,"byd":229,"thin":0},{"m":"2025-07","s":"SUV","mkt":1475,"all":2571,"byd":531,"thin":0},{"m":"2025-07","s":"Sedan","mkt":200,"all":736,"byd":86,"thin":0},{"m":"2025-08","s":"MPV","mkt":351,"all":985,"byd":287,"thin":0},{"m":"2025-08","s":"SUV","mkt":1372,"all":2595,"byd":405,"thin":0},{"m":"2025-08","s":"Sedan","mkt":221,"all":719,"byd":82,"thin":0},{"m":"2025-09","s":"MPV","mkt":276,"all":826,"byd":215,"thin":0},{"m":"2025-09","s":"SUV","mkt":1728,"all":2843,"byd":592,"thin":0},{"m":"2025-09","s":"Sedan","mkt":249,"all":693,"byd":111,"thin":0},{"m":"2025-10","s":"MPV","mkt":257,"all":792,"byd":193,"thin":0},{"m":"2025-10","s":"SUV","mkt":1545,"all":2395,"byd":694,"thin":0},{"m":"2025-10","s":"Sedan","mkt":239,"all":549,"byd":107,"thin":0},{"m":"2025-11","s":"MPV","mkt":263,"all":813,"byd":199,"thin":0},{"m":"2025-11","s":"SUV","mkt":1517,"all":2456,"byd":660,"thin":0},{"m":"2025-11","s":"Sedan","mkt":399,"all":778,"byd":190,"thin":0},{"m":"2025-12","s":"MPV","mkt":417,"all":1382,"byd":352,"thin":0},{"m":"2025-12","s":"SUV","mkt":2207,"all":3555,"byd":901,"thin":0},{"m":"2025-12","s":"Sedan","mkt":389,"all":1000,"byd":228,"thin":0},{"m":"2026-01","s":"MPV","mkt":263,"all":859,"byd":212,"thin":0},{"m":"2026-01","s":"SUV","mkt":1520,"all":2334,"byd":577,"thin":0},{"m":"2026-01","s":"Sedan","mkt":494,"all":777,"byd":320,"thin":0},{"m":"2026-02","s":"MPV","mkt":278,"all":796,"byd":217,"thin":0},{"m":"2026-02","s":"SUV","mkt":1549,"all":2274,"byd":464,"thin":0},{"m":"2026-02","s":"Sedan","mkt":364,"all":739,"byd":177,"thin":0},{"m":"2026-03","s":"MPV","mkt":318,"all":898,"byd":245,"thin":0},{"m":"2026-03","s":"SUV","mkt":2250,"all":3008,"byd":678,"thin":0},{"m":"2026-03","s":"Sedan","mkt":389,"all":800,"byd":178,"thin":0},{"m":"2026-04","s":"MPV","mkt":307,"all":733,"byd":219,"thin":0},{"m":"2026-04","s":"SUV","mkt":2149,"all":2882,"byd":843,"thin":0},{"m":"2026-04","s":"Sedan","mkt":439,"all":727,"byd":285,"thin":0},{"m":"2026-05","s":"MPV","mkt":318,"all":771,"byd":206,"thin":0},{"m":"2026-05","s":"SUV","mkt":2093,"all":2738,"byd":573,"thin":0},{"m":"2026-05","s":"Sedan","mkt":451,"all":771,"byd":311,"thin":0},{"m":"2026-06","s":"MPV","mkt":334,"all":717,"byd":169,"thin":0},{"m":"2026-06","s":"SUV","mkt":2459,"all":3151,"byd":564,"thin":0},{"m":"2026-06","s":"Sedan","mkt":482,"all":722,"byd":220,"thin":0},{"m":"2026-07","s":"MPV","mkt":309,"all":807,"byd":195,"thin":0},{"m":"2026-07","s":"SUV","mkt":2405,"all":3201,"byd":651,"thin":0},{"m":"2026-07","s":"Sedan","mkt":394,"all":694,"byd":149,"thin":0}],"period":[{"p":"P1","s":"MPV","mkt":354,"all":4094,"byd":329},{"p":"P1","s":"SUV","mkt":2587,"all":12842,"byd":492},{"p":"P1","s":"Sedan","mkt":858,"all":6363,"byd":1},{"p":"P2","s":"MPV","mkt":147,"all":5770,"byd":64},{"p":"P2","s":"SUV","mkt":7080,"all":18844,"byd":3234},{"p":"P2","s":"Sedan","mkt":2577,"all":8440,"byd":664},{"p":"P3","s":"MPV","mkt":3363,"all":10058,"byd":2901},{"p":"P3","s":"SUV","mkt":11667,"all":25008,"byd":4621},{"p":"P3","s":"Sedan","mkt":3271,"all":9924,"byd":1000},{"p":"P4","s":"MPV","mkt":3691,"all":10379,"byd":2709},{"p":"P4","s":"SUV","mkt":22794,"all":33432,"byd":7602},{"p":"P4","s":"Sedan","mkt":4510,"all":8969,"byd":2358}],"brand":[{"p":"P1","s":"MPV","b":"BYD","n":329},{"p":"P1","s":"MPV","b":"MAXUS","n":1},{"p":"P1","s":"MPV","b":"MERCEDES BENZ","n":15},{"p":"P1","s":"MPV","b":"OPEL","n":9},{"p":"P1","s":"SUV","b":"AUDI","n":69},{"p":"P1","s":"SUV","b":"B.M.W.","n":469},{"p":"P1","s":"SUV","b":"BYD","n":492},{"p":"P1","s":"SUV","b":"CITROEN","n":2},{"p":"P1","s":"SUV","b":"HYUNDAI","n":222},{"p":"P1","s":"SUV","b":"JAGUAR","n":2},{"p":"P1","s":"SUV","b":"KIA","n":39},{"p":"P1","s":"SUV","b":"M.G.","n":66},{"p":"P1","s":"SUV","b":"MAZDA","n":6},{"p":"P1","s":"SUV","b":"MERCEDES BENZ","n":230},{"p":"P1","s":"SUV","b":"OPEL","n":15},{"p":"P1","s":"SUV","b":"PEUGEOT","n":96},{"p":"P1","s":"SUV","b":"SKODA","n":1},{"p":"P1","s":"SUV","b":"TESLA","n":723},{"p":"P1","s":"SUV","b":"TOYOTA","n":20},{"p":"P1","s":"SUV","b":"VOLKSWAGEN","n":2},{"p":"P1","s":"SUV","b":"VOLVO","n":133},{"p":"P1","s":"Sedan","b":"B.M.W.","n":103},{"p":"P1","s":"Sedan","b":"BYD","n":1},{"p":"P1","s":"Sedan","b":"HYUNDAI","n":8},{"p":"P1","s":"Sedan","b":"MERCEDES BENZ","n":201},{"p":"P1","s":"Sedan","b":"POLESTAR","n":149},{"p":"P1","s":"Sedan","b":"PORSCHE","n":113},{"p":"P1","s":"Sedan","b":"TESLA","n":283},{"p":"P2","s":"MPV","b":"BYD","n":64},{"p":"P2","s":"MPV","b":"M.G.","n":11},{"p":"P2","s":"MPV","b":"MAXUS","n":51},{"p":"P2","s":"MPV","b":"MERCEDES BENZ","n":12},{"p":"P2","s":"MPV","b":"OPEL","n":8},{"p":"P2","s":"MPV","b":"VOLKSWAGEN","n":1},{"p":"P2","s":"SUV","b":"AUDI","n":66},{"p":"P2","s":"SUV","b":"B.M.W.","n":849},{"p":"P2","s":"SUV","b":"BYD","n":3234},{"p":"P2","s":"SUV","b":"CHERY","n":31},{"p":"P2","s":"SUV","b":"CITROEN","n":38},{"p":"P2","s":"SUV","b":"GAC","n":115},{"p":"P2","s":"SUV","b":"HYUNDAI","n":947},{"p":"P2","s":"SUV","b":"JAGUAR","n":9},{"p":"P2","s":"SUV","b":"KIA","n":51},{"p":"P2","s":"SUV","b":"LOTUS","n":10},{"p":"P2","s":"SUV","b":"M.G.","n":217},{"p":"P2","s":"SUV","b":"MAZDA","n":11},{"p":"P2","s":"SUV","b":"MERCEDES BENZ","n":313},{"p":"P2","s":"SUV","b":"OPEL","n":23},{"p":"P2","s":"SUV","b":"PEUGEOT","n":91},{"p":"P2","s":"SUV","b":"SKODA","n":13},{"p":"P2","s":"SUV","b":"SMART","n":18},{"p":"P2","s":"SUV","b":"TESLA","n":669},{"p":"P2","s":"SUV","b":"TOYOTA","n":48},{"p":"P2","s":"SUV","b":"VOLKSWAGEN","n":69},{"p":"P2","s":"SUV","b":"VOLVO","n":254},{"p":"P2","s":"SUV","b":"XPENG","n":2},{"p":"P2","s":"SUV","b":"ZEEKR","n":2},{"p":"P2","s":"Sedan","b":"B.M.W.","n":470},{"p":"P2","s":"Sedan","b":"BYD","n":664},{"p":"P2","s":"Sedan","b":"CITROEN","n":38},{"p":"P2","s":"Sedan","b":"GAC","n":3},{"p":"P2","s":"Sedan","b":"HYUNDAI","n":85},{"p":"P2","s":"Sedan","b":"LOTUS","n":1},{"p":"P2","s":"Sedan","b":"MERCEDES BENZ","n":189},{"p":"P2","s":"Sedan","b":"POLESTAR","n":77},{"p":"P2","s":"Sedan","b":"PORSCHE","n":86},{"p":"P2","s":"Sedan","b":"TESLA","n":964},{"p":"P3","s":"MPV","b":"BYD","n":2901},{"p":"P3","s":"MPV","b":"CITROEN","n":1},{"p":"P3","s":"MPV","b":"M.G.","n":17},{"p":"P3","s":"MPV","b":"MAXUS","n":154},{"p":"P3","s":"MPV","b":"MERCEDES BENZ","n":1},{"p":"P3","s":"MPV","b":"OPEL","n":5},{"p":"P3","s":"MPV","b":"VOLKSWAGEN","n":35},{"p":"P3","s":"MPV","b":"XPENG","n":129},{"p":"P3","s":"MPV","b":"ZEEKR","n":120},{"p":"P3","s":"SUV","b":"AUDI","n":165},{"p":"P3","s":"SUV","b":"AVATR","n":1},{"p":"P3","s":"SUV","b":"B.M.W.","n":1156},{"p":"P3","s":"SUV","b":"BYD","n":4621},{"p":"P3","s":"SUV","b":"CHERY","n":339},{"p":"P3","s":"SUV","b":"CITROEN","n":14},{"p":"P3","s":"SUV","b":"CUPRA","n":15},{"p":"P3","s":"SUV","b":"DEEPAL","n":59},{"p":"P3","s":"SUV","b":"GAC","n":713},{"p":"P3","s":"SUV","b":"GEELY","n":2},{"p":"P3","s":"SUV","b":"HYUNDAI","n":307},{"p":"P3","s":"SUV","b":"JAGUAR","n":1},{"p":"P3","s":"SUV","b":"KIA","n":27},{"p":"P3","s":"SUV","b":"LOTUS","n":6},{"p":"P3","s":"SUV","b":"M.G.","n":378},{"p":"P3","s":"SUV","b":"MERCEDES BENZ","n":452},{"p":"P3","s":"SUV","b":"NETA","n":5},{"p":"P3","s":"SUV","b":"NISSAN","n":12},{"p":"P3","s":"SUV","b":"OPEL","n":15},{"p":"P3","s":"SUV","b":"PEUGEOT","n":45},{"p":"P3","s":"SUV","b":"POLESTAR","n":86},{"p":"P3","s":"SUV","b":"PORSCHE","n":348},{"p":"P3","s":"SUV","b":"SERES","n":2},{"p":"P3","s":"SUV","b":"SKODA","n":33},{"p":"P3","s":"SUV","b":"SKYWORTH","n":10},{"p":"P3","s":"SUV","b":"SMART","n":56},{"p":"P3","s":"SUV","b":"TESLA","n":1500},{"p":"P3","s":"SUV","b":"TOYOTA","n":31},{"p":"P3","s":"SUV","b":"VOLKSWAGEN","n":147},{"p":"P3","s":"SUV","b":"VOLVO","n":311},{"p":"P3","s":"SUV","b":"XPENG","n":666},{"p":"P3","s":"SUV","b":"ZEEKR","n":144},{"p":"P3","s":"Sedan","b":"B.M.W.","n":426},{"p":"P3","s":"Sedan","b":"BYD","n":1000},{"p":"P3","s":"Sedan","b":"CITROEN","n":27},{"p":"P3","s":"Sedan","b":"EVEASY","n":1},{"p":"P3","s":"Sedan","b":"GAC","n":15},{"p":"P3","s":"Sedan","b":"GREAT WALL","n":13},{"p":"P3","s":"Sedan","b":"HYUNDAI","n":79},{"p":"P3","s":"Sedan","b":"LOTUS","n":5},{"p":"P3","s":"Sedan","b":"MERCEDES BENZ","n":116},{"p":"P3","s":"Sedan","b":"POLESTAR","n":107},{"p":"P3","s":"Sedan","b":"PORSCHE","n":62},{"p":"P3","s":"Sedan","b":"TESLA","n":1420},{"p":"P4","s":"MPV","b":"BYD","n":2709},{"p":"P4","s":"MPV","b":"HYUNDAI","n":27},{"p":"P4","s":"MPV","b":"M.G.","n":15},{"p":"P4","s":"MPV","b":"MAXUS","n":464},{"p":"P4","s":"MPV","b":"MERCEDES BENZ","n":1},{"p":"P4","s":"MPV","b":"OPEL","n":5},{"p":"P4","s":"MPV","b":"VOLKSWAGEN","n":21},{"p":"P4","s":"MPV","b":"XPENG","n":258},{"p":"P4","s":"MPV","b":"ZEEKR","n":191},{"p":"P4","s":"SUV","b":"AUDI","n":145},{"p":"P4","s":"SUV","b":"AVATR","n":376},{"p":"P4","s":"SUV","b":"B.M.W.","n":898},{"p":"P4","s":"SUV","b":"BYD","n":7602},{"p":"P4","s":"SUV","b":"CHERY","n":1727},{"p":"P4","s":"SUV","b":"CUPRA","n":25},{"p":"P4","s":"SUV","b":"DEEPAL","n":288},{"p":"P4","s":"SUV","b":"DONGFENG","n":169},{"p":"P4","s":"SUV","b":"GAC","n":1486},{"p":"P4","s":"SUV","b":"GEELY","n":228},{"p":"P4","s":"SUV","b":"GREAT WALL","n":18},{"p":"P4","s":"SUV","b":"HONGQI","n":30},{"p":"P4","s":"SUV","b":"HYUNDAI","n":189},{"p":"P4","s":"SUV","b":"JAGUAR","n":1},{"p":"P4","s":"SUV","b":"KGM","n":3},{"p":"P4","s":"SUV","b":"KIA","n":129},{"p":"P4","s":"SUV","b":"LEAPMOTOR","n":257},{"p":"P4","s":"SUV","b":"LOTUS","n":6},{"p":"P4","s":"SUV","b":"M.G.","n":1265},{"p":"P4","s":"SUV","b":"MAZDA","n":1},{"p":"P4","s":"SUV","b":"MERCEDES BENZ","n":309},{"p":"P4","s":"SUV","b":"NISSAN","n":16},{"p":"P4","s":"SUV","b":"OPEL","n":1},{"p":"P4","s":"SUV","b":"POLESTAR","n":34},{"p":"P4","s":"SUV","b":"PORSCHE","n":239},{"p":"P4","s":"SUV","b":"SERES","n":7},{"p":"P4","s":"SUV","b":"SKODA","n":13},{"p":"P4","s":"SUV","b":"SKYWORTH","n":18},{"p":"P4","s":"SUV","b":"SMART","n":68},{"p":"P4","s":"SUV","b":"SSANGYONG","n":1},{"p":"P4","s":"SUV","b":"SUBARU","n":40},{"p":"P4","s":"SUV","b":"TESLA","n":4141},{"p":"P4","s":"SUV","b":"TOYOTA","n":224},{"p":"P4","s":"SUV","b":"VOLKSWAGEN","n":56},{"p":"P4","s":"SUV","b":"VOLVO","n":417},{"p":"P4","s":"SUV","b":"XPENG","n":1131},{"p":"P4","s":"SUV","b":"ZEEKR","n":1236},{"p":"P4","s":"Sedan","b":"B.M.W.","n":402},{"p":"P4","s":"Sedan","b":"BYD","n":2358},{"p":"P4","s":"Sedan","b":"CITROEN","n":38},{"p":"P4","s":"Sedan","b":"DONGFENG","n":217},{"p":"P4","s":"Sedan","b":"EVEASY","n":27},{"p":"P4","s":"Sedan","b":"GAC","n":10},{"p":"P4","s":"Sedan","b":"HYUNDAI","n":35},{"p":"P4","s":"Sedan","b":"KIA","n":5},{"p":"P4","s":"Sedan","b":"LOTUS","n":3},{"p":"P4","s":"Sedan","b":"M.G.","n":133},{"p":"P4","s":"Sedan","b":"MAZDA","n":35},{"p":"P4","s":"Sedan","b":"MERCEDES BENZ","n":167},{"p":"P4","s":"Sedan","b":"POLESTAR","n":61},{"p":"P4","s":"Sedan","b":"PORSCHE","n":57},{"p":"P4","s":"Sedan","b":"TESLA","n":916},{"p":"P4","s":"Sedan","b":"TOYOTA","n":5},{"p":"P4","s":"Sedan","b":"VOLVO","n":41}],"tests":[{"s":"SUV","from":"P1","to":"P2","t":6.59,"p":3.901438891981919e-05,"up":12,"n":12,"cv_from":38.8,"cv_to":33.9},{"s":"SUV","from":"P2","to":"P3","t":6.74,"p":3.220550501168687e-05,"up":12,"n":12,"cv_from":33.9,"cv_to":29.5},{"s":"SUV","from":"P3","to":"P4","t":13.99,"p":2.3705381625011998e-08,"up":12,"n":12,"cv_from":29.5,"cv_to":20.9},{"s":"Sedan","from":"P1","to":"P2","t":5.0,"p":0.00040452040825563157,"up":11,"n":12,"cv_from":38.7,"cv_to":51.5},{"s":"Sedan","from":"P2","to":"P3","t":1.27,"p":0.23181605704467523,"up":6,"n":12,"cv_from":51.5,"cv_to":36.5},{"s":"Sedan","from":"P3","to":"P4","t":2.11,"p":0.05879238702818148,"up":9,"n":12,"cv_from":36.5,"cv_to":24.7},{"s":"MPV","from":"P1","to":"P2","t":-2.49,"p":0.029796065386898753,"up":4,"n":12,"cv_from":71.8,"cv_to":37.7},{"s":"MPV","from":"P2","to":"P3","t":6.34,"p":5.5343598282126134e-05,"up":12,"n":12,"cv_from":37.7,"cv_to":52.5},{"s":"MPV","from":"P3","to":"P4","t":0.67,"p":0.5188702074259687,"up":7,"n":12,"cv_from":52.5,"cv_to":14.9},{"s":"ALL","from":"P1","to":"P2","t":6.45,"p":4.7357478541509046e-05,"up":12,"n":12,"cv_from":26.9,"cv_to":34.7},{"s":"ALL","from":"P2","to":"P3","t":12.45,"p":7.964944099254885e-08,"up":12,"n":12,"cv_from":34.7,"cv_to":22.1},{"s":"ALL","from":"P3","to":"P4","t":13.53,"p":3.361228182922198e-08,"up":12,"n":12,"cv_from":22.1,"cv_to":18.4}],"source":"byd_bev_sg analysis mart (segment_month_full) and fact_registration; LTA via data.gov.sg"}</script>
+<script>
+(function () {
+  "use strict";
+  const DATA = JSON.parse(document.getElementById("data").textContent);
+  const SEGS = ["SUV", "Sedan", "MPV"];
+  const P = ["P1", "P2", "P3", "P4"];
+  const PLABEL = { P1: "Aug 2022 to Jul 2023", P2: "Aug 2023 to Jul 2024", P3: "Aug 2024 to Jul 2025", P4: "Aug 2025 to Jul 2026" };
+  const CLS = { SUV: "suv", Sedan: "sedan", MPV: "mpv", ALL: "byd" };
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const state = { from: "P3", seg: "ALL" };
+
+  // ---------- formatting
+  const nf = new Intl.NumberFormat("en-US");
+  const fmt = n => nf.format(Math.round(n));
+  const sfmt = n => (Math.round(n) > 0 ? "+" : Math.round(n) < 0 ? "−" : "") + nf.format(Math.abs(Math.round(n)));
+  const pct = (n, d = 1) => n.toFixed(d) + "%";
+  const spp = n => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toFixed(1) + " pp";
+  const spct = n => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toFixed(1) + "%";
+  const compact = n => Math.abs(n) >= 1000 ? (n / 1000).toFixed(Math.abs(n) >= 10000 ? 0 : 1).replace(/\.0$/, "") + "K" : String(Math.round(n));
+  const toPeriod = from => P[P.indexOf(from) + 1];
+  const segs = () => (state.seg === "ALL" ? SEGS : [state.seg]);
+  const segLabel = s => (s === "ALL" ? "all three segments" : s);
+  const cssv = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  // ---------- data access
+  const periodMap = {};
+  DATA.period.forEach(r => { periodMap[r.p + "|" + r.s] = r; });
+  function tot(p, list) {
+    return list.reduce((a, s) => { const r = periodMap[p + "|" + s]; a.mkt += r.mkt; a.all += r.all; a.byd += r.byd; return a; },
+      { mkt: 0, all: 0, byd: 0 });
+  }
+  function decomp(s, a, b) {
+    const r0 = periodMap[a + "|" + s], r1 = periodMap[b + "|" + s];
+    const s0 = r0.byd / r0.mkt, s1 = r1.byd / r1.mkt;
+    return {
+      b0: r0.byd, b1: r1.byd, m0: r0.mkt, m1: r1.mkt, s0, s1,
+      change: r1.byd - r0.byd,
+      market: (s0 + s1) / 2 * (r1.mkt - r0.mkt),
+      share: (r0.mkt + r1.mkt) / 2 * (s1 - s0),
+      bench: s0 * r1.mkt,
+      gap: r1.byd - s0 * r1.mkt
+    };
+  }
+  function sumDecomp(list, a, b) {
+    const o = { b0: 0, b1: 0, m0: 0, m1: 0, change: 0, market: 0, share: 0, bench: 0, gap: 0 };
+    list.forEach(s => { const d = decomp(s, a, b); Object.keys(o).forEach(k => { o[k] += d[k]; }); });
+    o.s0 = o.b0 / o.m0; o.s1 = o.b1 / o.m1;
+    return o;
+  }
+  const monthly = DATA.monthly;
+  const months = [...new Set(monthly.map(r => r.m))].sort();
+  const monthIdx = {};
+  monthly.forEach(r => { monthIdx[r.m + "|" + r.s] = r; });
+  const periodOf = m => { const y = +m.slice(0, 4), mo = +m.slice(5, 7); const st = mo >= 8 ? y : y - 1; return { 2022: "P1", 2023: "P2", 2024: "P3", 2025: "P4" }[st] || null; };
+  const monthName = m => new Date(+m.slice(0, 4), +m.slice(5, 7) - 1, 1).toLocaleString("en-US", { month: "short", year: "numeric" });
+
+  // ---------- tooltip
+  const tip = document.getElementById("tip");
+  function showTip(evt, head, rows) {
+    tip.textContent = "";
+    const h = document.createElement("div"); h.className = "h"; h.textContent = head; tip.appendChild(h);
+    rows.forEach(r => {
+      const row = document.createElement("div"); row.className = "r";
+      const n = document.createElement("span"); n.className = "n";
+      if (r.cls) { const i = document.createElement("i"); i.style.background = "var(--" + r.cls + ")"; n.appendChild(i); }
+      n.appendChild(document.createTextNode(r.name));
+      const b = document.createElement("b"); b.textContent = r.value;
+      row.appendChild(n); row.appendChild(b); tip.appendChild(row);
+    });
+    tip.style.display = "block";
+    let x, y;
+    if (evt.clientX !== undefined && evt.type !== "focus") { x = evt.clientX; y = evt.clientY; }
+    else { const bb = evt.target.getBoundingClientRect(); x = bb.right; y = bb.top; }
+    const w = tip.offsetWidth, hh = tip.offsetHeight;
+    let left = x + 14, top = y + 14;
+    if (left + w > window.innerWidth - 8) left = x - w - 14;
+    if (top + hh > window.innerHeight - 8) top = y - hh - 14;
+    tip.style.left = Math.max(8, left) + "px"; tip.style.top = Math.max(8, top) + "px";
+  }
+  const hideTip = () => { tip.style.display = "none"; };
+
+  // ---------- svg helpers
+  function el(tag, attrs, parent) {
+    const e = document.createElementNS(SVGNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function text(parent, x, y, str, attrs) {
+    const t = el("text", Object.assign({ x, y, "font-size": 11, fill: "var(--muted)" }, attrs || {}), parent);
+    t.textContent = str; return t;
+  }
+  function roundedBarPath(x0, x1, y, h, r) {
+    // horizontal bar from x0 (baseline, square) to x1 (data end, rounded)
+    const w = Math.abs(x1 - x0); r = Math.min(r, w, h / 2);
+    if (w < 0.5) return "";
+    if (x1 >= x0) return `M${x0},${y}H${x1 - r}Q${x1},${y} ${x1},${y + r}V${y + h - r}Q${x1},${y + h} ${x1 - r},${y + h}H${x0}Z`;
+    return `M${x0},${y}H${x1 + r}Q${x1},${y} ${x1},${y + r}V${y + h - r}Q${x1},${y + h} ${x1 + r},${y + h}H${x0}Z`;
+  }
+  function roundedColPath(x, w, y0, y1, r, roundTop) {
+    const h = Math.abs(y0 - y1); r = roundTop ? Math.min(r, h, w / 2) : 0;
+    if (h < 0.5) return "";
+    return `M${x},${y0}V${y1 + r}Q${x},${y1} ${x + r},${y1}H${x + w - r}Q${x + w},${y1} ${x + w},${y1 + r}V${y0}Z`;
+  }
+  function niceMax(v) {
+    if (v <= 0) return 1;
+    const p = Math.pow(10, Math.floor(Math.log10(v))); const f = v / p;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+  }
+  const widthOf = node => Math.max(300, node.clientWidth || 600);
+
+  // ---------- filters
+  function buildFilters() {
+    const fp = document.getElementById("fPeriod");
+    ["P1", "P2", "P3"].forEach(a => {
+      const b = document.createElement("button"); b.type = "button";
+      b.textContent = a + " → " + toPeriod(a); b.dataset.v = a;
+      b.addEventListener("click", () => { state.from = a; render(); });
+      fp.appendChild(b);
+    });
+    const fs = document.getElementById("fSeg");
+    ["ALL"].concat(SEGS).forEach(s => {
+      const b = document.createElement("button"); b.type = "button"; b.dataset.v = s;
+      if (s !== "ALL") { const sw = document.createElement("span"); sw.className = "swatch"; sw.style.background = "var(--" + CLS[s] + ")"; b.appendChild(sw); }
+      b.appendChild(document.createTextNode(s === "ALL" ? "All three" : s));
+      b.addEventListener("click", () => { state.seg = s; render(); });
+      fs.appendChild(b);
+    });
+  }
+  function syncFilters() {
+    document.querySelectorAll("#fPeriod button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === state.from));
+    document.querySelectorAll("#fSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === state.seg));
+    const b = toPeriod(state.from);
+    document.getElementById("periodNote").textContent = state.from + ": " + PLABEL[state.from] + " · " + b + ": " + PLABEL[b];
+  }
+
+  // ---------- KPI tiles
+  function renderKpis() {
+    const a = state.from, b = toPeriod(a), list = segs();
+    const t0 = tot(a, list), t1 = tot(b, list), d = sumDecomp(list, a, b);
+    const s0 = 100 * t0.byd / t0.mkt, s1 = 100 * t1.byd / t1.mkt;
+    const tiles = [
+      { k: "BEV market, " + b, v: fmt(t1.mkt), d: [spct(100 * (t1.mkt / t0.mkt - 1)), " vs " + a + " (" + fmt(t0.mkt) + ")"], sign: t1.mkt - t0.mkt },
+      { k: "BYD BEV registrations, " + b, v: fmt(t1.byd), d: [sfmt(t1.byd - t0.byd), " vs " + a + " (" + fmt(t0.byd) + ")"], sign: t1.byd - t0.byd },
+      { k: "BYD share of BEV market, " + b, v: pct(s1), d: [spp(s1 - s0), " vs " + a + " (" + pct(s0) + ")"], sign: s1 - s0 },
+      { k: state.seg === "ALL" ? "Net Capture Gap, " + a + " → " + b : "Capture Gap, " + a + " → " + b, v: sfmt(d.gap),
+        d: ["", "BEVs vs maintain-share benchmark of " + fmt(d.bench)], sign: 0 }
+    ];
+    const box = document.getElementById("kpis"); box.textContent = "";
+    tiles.forEach(t => {
+      const div = document.createElement("div"); div.className = "tile";
+      const k = document.createElement("div"); k.className = "k"; k.textContent = t.k;
+      const v = document.createElement("div"); v.className = "v"; v.textContent = t.v;
+      const dd = document.createElement("div"); dd.className = "d";
+      if (t.d[0]) { const bb = document.createElement("b"); bb.textContent = t.d[0]; bb.className = t.sign > 0 ? "pos" : t.sign < 0 ? "neg" : ""; dd.appendChild(bb); }
+      dd.appendChild(document.createTextNode(t.d[1]));
+      div.appendChild(k); div.appendChild(v); div.appendChild(dd); box.appendChild(div);
+    });
+  }
+
+  function legend(id, list, kind) {
+    const lg = document.getElementById(id); lg.textContent = "";
+    if (list.length < 2) return;
+    list.forEach(s => {
+      const sp = document.createElement("span"); const i = document.createElement("i");
+      if (kind === "box") i.className = "box";
+      i.style.background = "var(--" + CLS[s] + ")"; sp.appendChild(i); sp.appendChild(document.createTextNode(s)); lg.appendChild(sp);
+    });
+  }
+
+  // ---------- Q1
+  function renderQ1() {
+    const a = state.from, b = toPeriod(a), list = segs();
+    const d = sumDecomp(list, a, b);
+    const ins = document.getElementById("q1Insight"); ins.textContent = "";
+    const parts = [
+      "From " + a + " to " + b + ", BYD added ", ["b", sfmt(d.change)], " BEV registrations in " + segLabel(state.seg) + ". Market growth contributed ",
+      ["b", sfmt(d.market)], " and the change in BYD's share contributed ", ["b", sfmt(d.share)], ". ",
+      d.share < 0 ? "Growth was carried by a rising market while BYD's share slipped." : "BYD grew faster than its market and gained share."
+    ];
+    parts.forEach(p => { if (Array.isArray(p)) { const e = document.createElement("b"); e.textContent = p[1]; ins.appendChild(e); } else ins.appendChild(document.createTextNode(p)); });
+
+    // stacked columns
+    legend("q1Legend", list, "box");
+    const host = document.getElementById("q1Cols"); host.textContent = "";
+    const W = widthOf(host), H = 250, m = { l: 44, r: 10, t: 22, b: 30 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "BYD BEV registrations by period, stacked by segment" }, host);
+    const totals = P.map(p => list.reduce((s, x) => s + periodMap[p + "|" + x].byd, 0));
+    const ymax = niceMax(Math.max(...totals) * 1.08);
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const y = v => m.t + ih - v / ymax * ih;
+    for (let i = 0; i <= 4; i++) {
+      const v = ymax * i / 4; el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: i ? "var(--grid)" : "var(--axis)", "stroke-width": 1 }, svg);
+      text(svg, m.l - 6, y(v) + 4, compact(v), { "text-anchor": "end" });
+    }
+    const band = iw / P.length, cw = Math.min(56, band * 0.5);
+    P.forEach((p, i) => {
+      const cx = m.l + band * i + band / 2, x = cx - cw / 2;
+      const active = p === a || p === b;
+      let acc = 0;
+      list.forEach((s, j) => {
+        const v = periodMap[p + "|" + s].byd; if (!v) return;
+        const y0 = y(acc), y1 = y(acc + v);
+        const top = j === list.length - 1;
+        const path = el("path", { d: roundedColPath(x, cw, y0 - (acc ? 1 : 0), y1 + (top ? 0 : 1), 4, top), class: "mark", tabindex: 0,
+          style: `fill:var(--${CLS[s]});opacity:${active ? 1 : 0.4}` }, svg);
+        const rows = [{ name: s, value: fmt(v), cls: CLS[s] }];
+        const fn = e => showTip(e, p + " · " + PLABEL[p], rows.concat(list.length > 1 ? [{ name: "Total", value: fmt(totals[i]) }] : []));
+        path.addEventListener("pointermove", fn); path.addEventListener("focus", fn);
+        path.addEventListener("pointerleave", hideTip); path.addEventListener("blur", hideTip);
+        acc += v;
+      });
+      text(svg, cx, y(totals[i]) - 6, fmt(totals[i]), { "text-anchor": "middle", fill: active ? "var(--ink)" : "var(--ink-2)", "font-weight": active ? 650 : 400 });
+      text(svg, cx, H - 10, p, { "text-anchor": "middle", fill: active ? "var(--ink)" : "var(--muted)", "font-weight": active ? 650 : 400 });
+    });
+
+    // decomposition table and effect charts
+    const rows = list.map(s => Object.assign({ s }, decomp(s, a, b)));
+    if (list.length > 1) rows.push(Object.assign({ s: "Total" }, d));
+    const maxAbs = Math.max(1, ...rows.map(r => Math.max(Math.abs(r.market), Math.abs(r.share))));
+    const tb = document.createElement("table"); tb.className = "data";
+    const thead = tb.createTHead().insertRow();
+    ["Segment", "BYD " + a, "BYD " + b, "Change", "Market effect", "Share effect"].forEach((h, i) => {
+      const th = document.createElement("th"); th.textContent = h; if (i > 0) th.className = "num"; thead.appendChild(th);
+    });
+    const tbody = tb.createTBody();
+    rows.forEach(r => {
+      const tr = tbody.insertRow(); if (r.s === "Total") tr.className = "total";
+      const c0 = tr.insertCell(); const sn = document.createElement("span"); sn.className = "segname";
+      if (r.s !== "Total") { const sw = document.createElement("span"); sw.className = "swatch"; sw.style.background = "var(--" + CLS[r.s] + ")"; sn.appendChild(sw); }
+      sn.appendChild(document.createTextNode(r.s)); c0.appendChild(sn);
+      [fmt(r.b0), fmt(r.b1), sfmt(r.change)].forEach(v => { const c = tr.insertCell(); c.className = "num"; c.textContent = v; });
+      [sfmt(r.market), sfmt(r.share)].forEach(v => { const c = tr.insertCell(); c.className = "num"; c.textContent = v; });
+    });
+    ["market", "share"].forEach(k => {
+      const br = rows.map(r => ({ name: r.s, v: r[k], cls: r.s === "Total" ? "total" : CLS[r.s], strong: r.s === "Total",
+        tip: [{ name: k === "market" ? "Market effect" : "Share effect", value: sfmt(r[k]) },
+              { name: "BEV market " + a + " → " + b, value: fmt(r.m0) + " → " + fmt(r.m1) },
+              { name: "BYD share " + a + " → " + b, value: pct(100 * r.s0) + " → " + pct(100 * r.s1) }] }));
+      divergingBars(document.getElementById(k === "market" ? "q1Market" : "q1Share"), br, { label: k + " effect by segment", labelW: 56, vmax: maxAbs });
+    });
+    const host2 = document.getElementById("q1Table"); host2.textContent = ""; host2.appendChild(tb);
+  }
+
+  // ---------- generic monthly line chart
+  function lineChart(host, list, valueOf, opts) {
+    host.textContent = "";
+    const W = widthOf(host), H = opts.height || 260, m = { l: 46, r: 58, t: 20, b: 30 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": opts.label }, host);
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const x = i => m.l + i / (months.length - 1) * iw;
+    let vmax = 0;
+    list.forEach(s => months.forEach(mo => { const v = valueOf(monthIdx[mo + "|" + s]); if (v != null) vmax = Math.max(vmax, v); }));
+    let ymax = opts.ymax, step = opts.ymax ? opts.ymax / 4 : 0;
+    if (!ymax) { step = niceMax(vmax * 1.05 / 4); ymax = Math.ceil(vmax * 1.05 / step) * step; }
+    const nt = Math.round(ymax / step);
+    const y = v => m.t + ih - v / ymax * ih;
+    // shaded comparison band
+    const a = state.from, b = toPeriod(a);
+    const inBand = months.map((mo, i) => [i, periodOf(mo)]).filter(([, p]) => p === a || p === b).map(([i]) => i);
+    if (inBand.length) el("rect", { x: x(inBand[0]) - iw / (months.length - 1) / 2, y: m.t, width: x(inBand[inBand.length - 1]) - x(inBand[0]) + iw / (months.length - 1), height: ih, fill: "var(--shade)" }, svg);
+    for (let i = 0; i <= nt; i++) {
+      const v = step * i;
+      el("line", { x1: m.l, x2: m.l + iw, y1: y(v), y2: y(v), stroke: i ? "var(--grid)" : "var(--axis)", "stroke-width": 1 }, svg);
+      text(svg, m.l - 6, y(v) + 4, opts.tick(v), { "text-anchor": "end" });
+    }
+    // period boundaries (August) and labels
+    months.forEach((mo, i) => {
+      if (mo.slice(5) === "08") el("line", { x1: x(i) - iw / (months.length - 1) / 2, x2: x(i) - iw / (months.length - 1) / 2, y1: m.t, y2: m.t + ih, stroke: "var(--grid)", "stroke-width": 1 }, svg);
+    });
+    P.forEach(p => {
+      const idx = months.map((mo, i) => [i, periodOf(mo)]).filter(([, q]) => q === p).map(([i]) => i);
+      const cx = (x(idx[0]) + x(idx[idx.length - 1])) / 2;
+      text(svg, cx, m.t - 6, p, { "text-anchor": "middle", fill: p === a || p === b ? "var(--ink)" : "var(--muted)", "font-weight": p === a || p === b ? 650 : 400 });
+    });
+    months.forEach((mo, i) => {
+      if (mo.slice(5) === "01") text(svg, x(i), H - 10, mo.slice(0, 4), { "text-anchor": "middle" });
+    });
+    // lines
+    const ends = [];
+    list.forEach(s => {
+      const pts = months.map((mo, i) => { const r = monthIdx[mo + "|" + s]; const v = valueOf(r); return v == null ? null : [x(i), y(v), r]; });
+      let d = "", pen = false;
+      pts.forEach(pt => { if (!pt) { pen = false; return; } d += (pen ? "L" : "M") + pt[0].toFixed(1) + "," + pt[1].toFixed(1); pen = true; });
+      el("path", { d, fill: "none", style: `stroke:var(--${CLS[s]})`, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+      if (opts.thin) pts.forEach(pt => { if (pt && pt[2].thin) el("circle", { cx: pt[0], cy: pt[1], r: 3.5, style: `fill:var(--surface);stroke:var(--${CLS[s]})`, "stroke-width": 1.5 }, svg); });
+      const last = pts[pts.length - 1];
+      if (last) { el("circle", { cx: last[0], cy: last[1], r: 4, style: `fill:var(--${CLS[s]});stroke:var(--surface)`, "stroke-width": 2 }, svg); ends.push({ s, y: last[1], v: valueOf(last[2]) }); }
+    });
+    // end labels when they do not collide
+    ends.sort((p, q) => p.y - q.y);
+    ends.forEach((e, i) => {
+      const clash = (i > 0 && Math.abs(e.y - ends[i - 1].y) < 13) || (i < ends.length - 1 && Math.abs(e.y - ends[i + 1].y) < 13);
+      if (!clash || ends.length === 1) text(svg, m.l + iw + 8, e.y + 4, opts.endLabel(e), { fill: "var(--ink-2)" });
+    });
+    // crosshair
+    const cross = el("line", { y1: m.t, y2: m.t + ih, stroke: "var(--ink-2)", "stroke-width": 1, visibility: "hidden" }, svg);
+    const hit = el("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent", tabindex: 0, class: "mark", "aria-label": opts.label + ", use left and right arrows to read values" }, svg);
+    let cur = months.length - 1;
+    const show = (i, evt) => {
+      cur = Math.max(0, Math.min(months.length - 1, i));
+      cross.setAttribute("x1", x(cur)); cross.setAttribute("x2", x(cur)); cross.setAttribute("visibility", "visible");
+      const mo = months[cur];
+      const rows = list.map(s => { const r = monthIdx[mo + "|" + s]; return { name: s + (opts.thin && r.thin ? " (thin month)" : ""), value: opts.fmtV(valueOf(r), r), cls: CLS[s] }; });
+      showTip(evt, monthName(mo) + " · " + (periodOf(mo) || "before P1"), rows);
+    };
+    hit.addEventListener("pointermove", e => { const bb = svg.getBoundingClientRect(); const px = (e.clientX - bb.left) / bb.width * W; show(Math.round((px - m.l) / iw * (months.length - 1)), e); });
+    hit.addEventListener("pointerleave", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
+    hit.addEventListener("focus", e => show(cur, e));
+    hit.addEventListener("blur", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
+    hit.addEventListener("keydown", e => { if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); show(cur + (e.key === "ArrowRight" ? 1 : -1), { type: "focus", target: hit }); } });
+  }
+
+  // ---------- Q2
+  function renderQ2() {
+    const a = state.from, b = toPeriod(a), list = segs();
+    legend("q2Legend", list, "line");
+    lineChart(document.getElementById("q2Line"), list, r => r.mkt, {
+      label: "Monthly BEV registrations by segment", tick: compact, fmtV: v => fmt(v), endLabel: e => e.s, height: 270
+    });
+    // comparison table for all three segments (selected row highlighted)
+    const tests = {}; DATA.tests.forEach(t => { tests[t.s + "|" + t.from] = t; });
+    const share = {};
+    DATA.brand.forEach(r => { const k = r.p + "|" + r.s; (share[k] = share[k] || []).push(r); });
+    const rows = SEGS.map(s => {
+      const r0 = periodMap[a + "|" + s], r1 = periodMap[b + "|" + s];
+      const rivals = (share[b + "|" + s] || []).filter(x => x.b !== "BYD").sort((p, q) => q.n - p.n);
+      const t = tests[s + "|" + a];
+      return { s, m0: r0.mkt, m1: r1.mkt, g: 100 * (r1.mkt / r0.mkt - 1), inc: r1.mkt - r0.mkt, pen: 100 * r1.mkt / r1.all,
+        rival: rivals.length ? rivals[0].b + " (" + pct(100 * rivals[0].n / r1.mkt) + ")" : "n/a", t, mix: 0 };
+    });
+    const totalB = rows.reduce((q, r) => q + r.m1, 0); rows.forEach(r => { r.mix = 100 * r.m1 / totalB; });
+    const tb = document.createElement("table"); tb.className = "data wraphead";
+    const hr = tb.createTHead().insertRow();
+    [["Segment", ""], ["BEV market " + a, "num"], ["BEV market " + b, "num"], ["Growth", "num"], ["Increase", "num"], ["Share of " + b + " BEV market", "num"],
+      ["BEV penetration " + b, "num"], ["Largest non-BYD make, " + b, ""], ["Monthly CV " + a + " → " + b, "num"], ["Paired t", "num"], ["p-value", "num"], ["Months up", "num"]]
+      .forEach(([h, c]) => { const th = document.createElement("th"); th.textContent = h; if (c) th.className = c; hr.appendChild(th); });
+    const body = tb.createTBody();
+    rows.forEach(r => {
+      const tr = body.insertRow(); if (state.seg === r.s) tr.className = "sel";
+      const c0 = tr.insertCell(); const sn = document.createElement("span"); sn.className = "segname";
+      const sw = document.createElement("span"); sw.className = "swatch"; sw.style.background = "var(--" + CLS[r.s] + ")"; sn.appendChild(sw);
+      sn.appendChild(document.createTextNode(r.s)); c0.appendChild(sn);
+      const p = r.t.p < 0.001 ? "p < 0.001" : "p = " + r.t.p.toFixed(3);
+      [[fmt(r.m0), "num"], [fmt(r.m1), "num"], [spct(r.g), "num"], [sfmt(r.inc), "num"], [pct(r.mix), "num"], [pct(r.pen), "num"],
+        [r.rival, ""], [pct(r.t.cv_from) + " → " + pct(r.t.cv_to), "num"],
+        [r.t.t.toFixed(2), "num"], [p.replace("p = ", "").replace("p ", ""), "num"], [r.t.up + " of " + r.t.n, "num"]]
+        .forEach(([v, c]) => { const td = tr.insertCell(); td.textContent = v; if (c) td.className = c; });
+    });
+    const host = document.getElementById("q2Table"); host.textContent = ""; host.appendChild(tb);
+    const top = rows.slice().sort((p, q) => q.inc - p.inc)[0];
+    const ins = document.getElementById("q2Insight"); ins.textContent = "";
+    const add = (s, bold) => { if (bold) { const e = document.createElement("b"); e.textContent = s; ins.appendChild(e); } else ins.appendChild(document.createTextNode(s)); };
+    add(top.s, true); add(" added the most BEV registrations from " + a + " to " + b + " (");
+    add(sfmt(top.inc), true); add(", " + spct(top.g) + ") and made up "); add(pct(top.mix), true);
+    add(" of the " + b + " BEV market across the three segments. Growth is significant in a segment when the paired t-test p-value is below 0.05.");
+  }
+
+  // ---------- horizontal diverging bars
+  function divergingBars(host, rows, opts) {
+    host.textContent = "";
+    const W = widthOf(host), rowH = 30, pad = 54, m = { l: (opts.labelW || 92) + pad, r: pad, t: 6, b: 22 };
+    const H = m.t + m.b + rows.length * rowH;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": opts.label }, host);
+    const vmax = niceMax(opts.vmax || Math.max(1, ...rows.map(r => Math.abs(r.v))));
+    const iw = W - m.l - m.r, zero = m.l + iw / 2, sc = (iw / 2) / vmax;
+    [-vmax, -vmax / 2, 0, vmax / 2, vmax].forEach(v => {
+      const xx = zero + v * sc;
+      el("line", { x1: xx, x2: xx, y1: m.t, y2: H - m.b, stroke: v === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1 }, svg);
+      text(svg, xx, H - 6, (v > 0 ? "+" : v < 0 ? "−" : "") + compact(Math.abs(v)), { "text-anchor": "middle" });
+    });
+    rows.forEach((r, i) => {
+      const yy = m.t + i * rowH, bh = Math.min(18, rowH - 10), by = yy + (rowH - bh) / 2;
+      const x1 = zero + r.v * sc;
+      text(svg, (opts.labelW || 92) - 8, by + bh / 2 + 4, r.name, { "text-anchor": "end", fill: r.strong ? "var(--ink)" : "var(--ink-2)", "font-weight": r.strong ? 650 : 400 });
+      const hitR = el("rect", { x: 0, y: yy, width: W, height: rowH, fill: "transparent", class: "mark", tabindex: 0 }, svg);
+      el("path", { d: roundedBarPath(zero, x1, by, bh, 4), style: `fill:var(--${r.cls})`, "pointer-events": "none" }, svg);
+      text(svg, r.v >= 0 ? x1 + 6 : x1 - 6, by + bh / 2 + 4, sfmt(r.v), { "text-anchor": r.v >= 0 ? "start" : "end", fill: "var(--ink)", "font-weight": r.strong ? 650 : 400 });
+      const fn = e => showTip(e, r.name, r.tip);
+      hitR.addEventListener("pointermove", fn); hitR.addEventListener("focus", fn);
+      hitR.addEventListener("pointerleave", hideTip); hitR.addEventListener("blur", hideTip);
+    });
+  }
+
+  // ---------- Q3
+  function renderQ3() {
+    const a = state.from, b = toPeriod(a), list = segs();
+    const gaps = list.map(s => Object.assign({ s }, decomp(s, a, b)));
+    const net = sumDecomp(list, a, b);
+    const rows = gaps.map(g => ({ name: g.s, v: g.gap, cls: CLS[g.s], strong: true,
+      tip: [{ name: "Capture Gap", value: sfmt(g.gap) }, { name: "BYD actual " + b, value: fmt(g.b1) }, { name: "Benchmark", value: fmt(g.bench) },
+        { name: "BYD share " + a + " → " + b, value: pct(100 * g.s0) + " → " + pct(100 * g.s1) }] }));
+    if (list.length > 1) rows.push({ name: "Net", v: net.gap, cls: "total", strong: true,
+      tip: [{ name: "Net Capture Gap", value: sfmt(net.gap) }, { name: "Sum of the three segments", value: "" }] });
+    divergingBars(document.getElementById("q3Gap"), rows, { label: "Capture Gap by segment", labelW: 56 });
+
+    // gap table (table view)
+    const tb = document.createElement("table"); tb.className = "data"; tb.style.marginTop = "8px";
+    const hr = tb.createTHead().insertRow();
+    [["Segment", ""], ["Share " + a, "num"], ["Share " + b, "num"], ["Change", "num"], ["Benchmark", "num"], ["Actual", "num"], ["Gap", "num"]]
+      .forEach(([h, c]) => { const th = document.createElement("th"); th.textContent = h; if (c) th.className = c; hr.appendChild(th); });
+    const bd = tb.createTBody();
+    gaps.concat(list.length > 1 ? [Object.assign({ s: "Net" }, net)] : []).forEach(g => {
+      const tr = bd.insertRow(); if (g.s === "Net") tr.className = "total";
+      [[g.s, ""], [pct(100 * g.s0), "num"], [pct(100 * g.s1), "num"], [spp(100 * (g.s1 - g.s0)), "num"], [fmt(g.bench), "num"], [fmt(g.b1), "num"], [sfmt(g.gap), "num"]]
+        .forEach(([v, c]) => { const td = tr.insertCell(); td.textContent = v; if (c) td.className = c; });
+    });
+    const gt = document.getElementById("q3GapTable"); gt.textContent = ""; gt.appendChild(tb);
+
+    // competitor gaps: each make's own previous-period share held into the current period, summed over the selected segments
+    const byKey = {};
+    DATA.brand.forEach(r => { if ((r.p === a || r.p === b) && list.includes(r.s)) byKey[r.p + "|" + r.s + "|" + r.b] = r.n; });
+    const makes = [...new Set(DATA.brand.filter(r => (r.p === a || r.p === b) && list.includes(r.s)).map(r => r.b))];
+    const comp = makes.map(mk => {
+      let gap = 0, n0 = 0, n1 = 0;
+      list.forEach(s => {
+        const m0 = periodMap[a + "|" + s].mkt, m1 = periodMap[b + "|" + s].mkt;
+        const x0 = byKey[a + "|" + s + "|" + mk] || 0, x1 = byKey[b + "|" + s + "|" + mk] || 0;
+        gap += x1 - x0 / m0 * m1; n0 += x0; n1 += x1;
+      });
+      return { mk, gap, n0, n1 };
+    }).sort((p, q) => q.gap - p.gap);
+    const pick = comp.slice(0, 5).concat(comp.slice(-3)).filter((v, i, arr) => arr.indexOf(v) === i);
+    if (!pick.find(c => c.mk === "BYD")) { const byd = comp.find(c => c.mk === "BYD"); if (byd) pick.push(byd); }
+    pick.sort((p, q) => q.gap - p.gap);
+    const t0 = tot(a, list), t1 = tot(b, list);
+    const crow = pick.map(c => ({ name: c.mk, v: c.gap, cls: c.mk === "BYD" ? (state.seg === "ALL" ? "byd" : CLS[state.seg]) : "other", strong: c.mk === "BYD",
+      tip: [{ name: "Capture Gap", value: sfmt(c.gap) }, { name: "BEVs " + a, value: fmt(c.n0) }, { name: "BEVs " + b, value: fmt(c.n1) },
+        { name: "Share " + a + " → " + b, value: pct(100 * c.n0 / t0.mkt) + " → " + pct(100 * c.n1 / t1.mkt) }] }));
+    document.getElementById("q3CompTitle").textContent = "Brands above or below their own benchmark, " + segLabel(state.seg);
+    divergingBars(document.getElementById("q3Comp"), crow, { label: "Competitor Capture Gaps", labelW: 112 });
+    const ct = document.createElement("table"); ct.className = "data";
+    const ch = ct.createTHead().insertRow();
+    [["Make", ""], ["BEVs " + a, "num"], ["BEVs " + b, "num"], ["Capture Gap", "num"]].forEach(([h, c]) => { const th = document.createElement("th"); th.textContent = h; if (c) th.className = c; ch.appendChild(th); });
+    const cb = ct.createTBody();
+    comp.forEach(c => { const tr = cb.insertRow(); [[c.mk, ""], [fmt(c.n0), "num"], [fmt(c.n1), "num"], [sfmt(c.gap), "num"]].forEach(([v, k]) => { const td = tr.insertCell(); td.textContent = v; if (k) td.className = k; }); });
+    const ctHost = document.getElementById("q3CompTable"); ctHost.textContent = ""; ctHost.appendChild(ct);
+
+    // insight
+    const worst = gaps.slice().sort((p, q) => p.gap - q.gap)[0];
+    const gainers = comp.filter(c => c.mk !== "BYD" && c.gap > 0).slice(0, 3).map(c => c.mk);
+    const ins = document.getElementById("q3Insight"); ins.textContent = "";
+    const add = (s, bold) => { if (bold) { const e = document.createElement("b"); e.textContent = s; ins.appendChild(e); } else ins.appendChild(document.createTextNode(s)); };
+    if (list.length > 1) { add("Net Capture Gap from " + a + " to " + b + " is "); add(sfmt(net.gap), true); add(" BEVs. The largest shortfall is in "); add(worst.s + " (" + sfmt(worst.gap) + ")", true); add(". "); }
+    else { add(worst.s + " Capture Gap from " + a + " to " + b + " is "); add(sfmt(worst.gap), true); add(" BEVs, with BYD's share moving from " + pct(100 * worst.s0) + " to " + pct(100 * worst.s1) + ". "); }
+    if (gainers.length) { add("Brands that gained most against their own benchmark: "); const g = gainers.join(", "); add(g, true); if (!g.endsWith(".")) add("."); }
+
+    // monthly share
+    legend("q3Legend", list, "line");
+    lineChart(document.getElementById("q3Share"), list, r => (r.mkt > 0 ? 100 * r.byd / r.mkt : null), {
+      label: "BYD share of segment BEV market, monthly", tick: v => Math.round(v) + "%", ymax: 100, thin: true,
+      fmtV: (v, r) => (v == null ? "n/a" : pct(v) + " (" + fmt(r.byd) + " of " + fmt(r.mkt) + ")"), endLabel: e => e.s + " " + Math.round(e.v) + "%", height: 260
+    });
+  }
+
+  function render() {
+    syncFilters(); renderKpis(); renderQ1(); renderQ2(); renderQ3();
+  }
+
+  // theme toggle
+  const themeBtn = document.getElementById("themeBtn");
+  const isDark = () => document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  const syncTheme = () => { themeBtn.textContent = isDark() ? "Light mode" : "Dark mode"; };
+  themeBtn.addEventListener("click", () => {
+    document.documentElement.dataset.theme = isDark() ? "light" : "dark";
+    try { localStorage.setItem("byd-dash-theme", document.documentElement.dataset.theme); } catch (e) { /* storage unavailable */ }
+    syncTheme();
+  });
+  try { const t = localStorage.getItem("byd-dash-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) { /* storage unavailable */ }
+  syncTheme();
+
+  buildFilters(); render();
+  let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(render, 150); });
+})();
+</script>
+</body>
+</html>
