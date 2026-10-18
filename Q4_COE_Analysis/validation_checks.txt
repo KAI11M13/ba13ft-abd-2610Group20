@@ -1,0 +1,9 @@
+market_category_b_r: PASS
+market_category_b_p: PASS
+market_category_b_beta: PASS
+market_category_b_R2: PASS
+sedan_lag1_r: PASS
+sedan_lag1_p: PASS
+market_eight_tests: PASS
+share_24_tests: PASS
+share_none_significant: PASS
